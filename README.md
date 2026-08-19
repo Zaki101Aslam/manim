@@ -70,13 +70,15 @@
 
 ---
 
-## 🚀 Quick Start (Plug & Play)
+## 🚀 Quick Start (Plug & Play Across All Platforms)
 
-### Option 1: macOS Double-Click (Zero Terminal Setup)
+### 🪟 Windows (Zero Terminal Setup)
+Double-click **`start_studio.bat`** in File Explorer.
+
+### 🍏 macOS (Zero Terminal Setup)
 Double-click **`start_studio.command`** in Finder.
 
-### Option 2: Terminal / Cross-Platform
-
+### 🐧 Linux / Terminal
 ```bash
 # Clone repository
 git clone https://github.com/Zaki101Aslam/manim.git
@@ -88,7 +90,7 @@ cd manim
 python studio.py
 ```
 
-Open **[http://localhost:8000](http://localhost:8000)** in your browser!
+Then visit **[http://localhost:8000](http://localhost:8000)** in your browser!
 
 ---
 
@@ -112,9 +114,10 @@ graph TD
 
 ```
 manim/
+├── start_studio.bat        # Double-clickable Windows launcher
 ├── start_studio.command    # Double-clickable macOS launcher
-├── start_studio.sh         # Shell launcher script
-├── studio.py               # Top-level CLI launcher & browser starter
+├── start_studio.sh         # Linux / macOS shell launcher script
+├── studio.py               # Top-level cross-platform CLI launcher & browser starter
 ├── server.py               # FastAPI backend API for rendering & video streaming
 ├── scene_builder.py        # UI-to-ManimGL Python compiler
 ├── collision_pi.py         # Standalone reference scene for Galperin Pi collisions

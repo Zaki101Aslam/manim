@@ -181,16 +181,40 @@ async def render_scene_endpoint(req: RenderRequest):
     elif req.resolution == "1080p":
         quality_flag = "--hd"
         
-    # Command to run manimgl
-    cmd = [
-        "uv", "run", "manimgl",
-        str(scene_file),
-        scene_name,
-        "-w",
-        quality_flag,
-        "--file_name", file_prefix,
-        "--video_dir", str(VIDEOS_DIR)
-    ]
+    # Detect available executable on Windows / Linux / macOS
+    uv_bin = shutil.which("uv")
+    manimgl_bin = shutil.which("manimgl")
+    
+    if uv_bin:
+        cmd = [
+            uv_bin, "run", "manimgl",
+            str(scene_file),
+            scene_name,
+            "-w",
+            quality_flag,
+            "--file_name", file_prefix,
+            "--video_dir", str(VIDEOS_DIR)
+        ]
+    elif manimgl_bin:
+        cmd = [
+            manimgl_bin,
+            str(scene_file),
+            scene_name,
+            "-w",
+            quality_flag,
+            "--file_name", file_prefix,
+            "--video_dir", str(VIDEOS_DIR)
+        ]
+    else:
+        cmd = [
+            sys.executable, "-m", "manimlib",
+            str(scene_file),
+            scene_name,
+            "-w",
+            quality_flag,
+            "--file_name", file_prefix,
+            "--video_dir", str(VIDEOS_DIR)
+        ]
     
     start_time = time.time()
     try:
