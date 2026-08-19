@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MathMotion Studio - Plug & Play Mathematical Animations</title>
+  
+  <!-- Google Fonts: Outfit (headings), Inter (UI), JetBrains Mono (Math/Code) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- KaTeX for live mathematical typesetting -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+  
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="dark-theme">
+  <div id="app" class="app-container">
+    
+    <!-- Top Header -->
+    <header class="top-header" role="banner">
+      <div class="header-left">
+        <div class="logo-badge" title="MathMotion Studio: Visual Animation Suite">
+          <div class="logo-icon-wrap">
+            <i data-lucide="sparkles" class="logo-sparkle"></i>
+            <span class="logo-symbol">&pi;</span>
+          </div>
+          <div class="logo-titles">
+            <h1 class="logo-title">MathMotion <span class="gradient-text">Studio</span></h1>
+            <span class="logo-tag">Plug & Play Math Animator</span>
+          </div>
+        </div>
+
+        <!-- Template Preset Selector -->
+        <div class="preset-selector-wrap">
+          <label for="preset-select" class="selector-label"><i data-lucide="layout-grid"></i> Concept:</label>
+          <select id="preset-select" class="custom-select" aria-label="Select Mathematical Concept">
+            <option value="collision_pi">⚡ 1. Collision &pi; Discovery (Galperin)</option>
+            <option value="calculus_riemann">📈 2. Calculus: Riemann Sums & Integrals</option>
+            <option value="linear_transformation">📐 3. 2D Matrix Transformations</option>
+            <option value="fourier_epicycles">🌀 4. Fourier Epicycles (Circle Drawing)</option>
+            <option value="trig_unit_circle">⭕ 5. Unit Circle & Sine Wave</option>
+            <option value="latex_proof">✨ 6. Step-by-Step Formula Morphing</option>
+            <option value="storyboard">🎬 7. Custom Storyboard Builder</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="header-center">
+        <!-- Mode Switcher: Live Canvas vs Rendered Video -->
+        <div class="view-mode-toggle" role="tablist">
+          <button id="btn-mode-canvas" class="mode-btn active" role="tab" aria-selected="true" title="Instant 60FPS Interactive Stage (Tweak & Drag Objects)">
+            <i data-lucide="play-circle"></i> Live Stage
+          </button>
+          <button id="btn-mode-video" class="mode-btn" role="tab" aria-selected="false" title="High-Definition ManimGL Rendered Video Player">
+            <i data-lucide="film"></i> Rendered Video
+          </button>
+        </div>
+      </div>
+
+      <div class="header-right">
+        <!-- Quick Help & Shortcuts Button -->
+        <button id="btn-help-modal" class="icon-btn" title="Quick Guide & Keyboard Shortcuts (?)" aria-label="Help">
+          <i data-lucide="help-circle"></i>
+        </button>
+
+        <!-- Sound Toggle -->
+        <button id="btn-audio-toggle" class="icon-btn active" title="Toggle Sound Effects (M)" aria-label="Audio Toggle">
+          <i data-lucide="volume-2"></i>
+        </button>
+        
+        <!-- Resolution Dropdown -->
+        <div class="render-quality-wrap">
+          <select id="render-quality-select" class="custom-select small-select" aria-label="Render Quality">
+            <option value="480p">⚡ 480p (Fast Preview)</option>
+            <option value="720p" selected>🎬 720p (HD Video)</option>
+            <option value="1080p">✨ 1080p (Full HD Broadcast)</option>
+          </select>
+        </div>
+
+        <!-- Render Button -->
+        <button id="btn-render-manim" class="primary-action-btn" title="Render Broadcast Video with Manim Engine">
+          <i data-lucide="video"></i>
+          <span>Render Manim Video</span>
+          <div class="spinner-ring" id="render-spinner"></div>
+        </button>
+
+        <!-- Export Dropdown -->
+        <div class="dropdown-wrap">
+          <button id="btn-export-menu" class="secondary-btn" aria-haspopup="true" aria-expanded="false">
+            <i data-lucide="download"></i> Export <i data-lucide="chevron-down" style="width:12px; height:12px;"></i>
+          </button>
+          <div class="dropdown-menu" id="export-dropdown" role="menu">
+            <button id="btn-export-mp4" role="menuitem"><i data-lucide="file-video"></i> Download MP4 Video</button>
+            <button id="btn-export-png" role="menuitem"><i data-lucide="image"></i> Save Current Frame (PNG)</button>
+            <button id="btn-export-code" role="menuitem"><i data-lucide="code"></i> View Python Code</button>
+            <button id="btn-export-json" role="menuitem"><i data-lucide="file-json"></i> Save Project File</button>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Workspace Body -->
+    <main class="workspace-layout">
+      
+      <!-- LEFT PANEL: Visual Math Concept Inspector -->
+      <aside class="left-panel glass-card" aria-label="Mathematical Parameters">
+        <div class="panel-header">
+          <div class="panel-title-wrap">
+            <i data-lucide="sliders" class="accent-icon"></i>
+            <h2 id="concept-title">Concept Parameters</h2>
+          </div>
+          <button id="btn-reset-defaults" class="text-btn-subtle" title="Reset all sliders for this concept to default values">
+            <i data-lucide="rotate-ccw"></i> Reset Defaults
+          </button>
+        </div>
+
+        <!-- Dynamic Controls Rendered Here based on Selected Preset -->
+        <div class="panel-scrollable-content" id="dynamic-controls-container"></div>
+
+        <!-- Educational Insight: Why This Works -->
+        <div class="math-insight-card" id="mathInsightCard">
+          <div class="insight-header" id="insightToggleHeader">
+            <div class="insight-title">
+              <i data-lucide="lightbulb" class="accent-amber-icon"></i>
+              <h4>The Math Behind This</h4>
+            </div>
+            <i data-lucide="chevron-down" class="insight-arrow" id="insightArrow"></i>
+          </div>
+          <div class="insight-body" id="insightBody">
+            <p id="insightContent">Loading mathematical explanation...</p>
+          </div>
+        </div>
+
+        <!-- Quick Action Math Typer Launcher -->
+        <div class="math-typer-trigger-card">
+          <div class="trigger-info">
+            <h4><i data-lucide="sigma"></i> Visual Formula Typer</h4>
+            <p>Click math symbols to build equations visually</p>
+          </div>
+          <button id="btn-open-math-typer" class="accent-btn-small" title="Open Visual Math Equation Composer">
+            <i data-lucide="plus"></i> Insert Formula
+          </button>
+        </div>
+      </aside>
+
+      <!-- CENTER PANEL: Interactive Visual Stage & Timeline -->
+      <section class="center-panel">
+        
+        <!-- Visual Viewport Card -->
+        <div class="viewport-card glass-card">
+          
+          <!-- Viewport Header with Quick Preset Pills & Interactive Drag Hint -->
+          <div class="viewport-header">
+            <div class="scene-status-badge">
+              <span class="live-dot"></span>
+              <span id="canvas-status-text">60 FPS Real-time Engine</span>
+              <span class="drag-hint-badge" id="dragHintBadge"><i data-lucide="hand"></i> Drag objects on canvas to interact!</span>
+            </div>
+            <div class="viewport-tools">
+              <button id="btn-grid-toggle" class="tool-btn active" title="Toggle Coordinate Grid (G)" aria-label="Toggle Grid"><i data-lucide="grid"></i></button>
+              <button id="btn-zoom-fit" class="tool-btn" title="Reset Viewport Pan & Zoom" aria-label="Reset View"><i data-lucide="maximize-2"></i></button>
+            </div>
+          </div>
+
+          <!-- Canvas Viewport -->
+          <div class="stage-container" id="stage-container">
+            <canvas id="mathCanvas" aria-label="Interactive Mathematical Animation Canvas"></canvas>
+            
+            <!-- Video Player Element (shown in Rendered Video mode) -->
+            <div id="video-player-wrap" class="video-player-wrap hidden">
+              <video id="manimVideoPlayer" controls playsinline aria-label="Rendered Manim Video"></video>
+              <div id="video-empty-state" class="empty-video-state">
+                <i data-lucide="clapperboard"></i>
+                <h3>No Rendered Video Yet</h3>
+                <p>Click <strong>"Render Manim Video"</strong> in the top bar to generate a broadcast-quality MP4 video with ManimGL.</p>
+                <button id="btn-render-empty" class="primary-action-btn">
+                  <i data-lucide="video"></i> Render Video Now
+                </button>
+              </div>
+            </div>
+
+            <!-- Mathematical Overlay Cards (Dynamic HUD) -->
+            <div class="math-hud" id="mathHud" aria-live="polite"></div>
+          </div>
+
+          <!-- Transport & Playback Control Bar -->
+          <div class="transport-bar" role="toolbar" aria-label="Animation Playback Controls">
+            <div class="transport-left">
+              <button id="btn-play-pause" class="playback-btn primary-btn-circle" title="Play / Pause (Space)" aria-label="Play or Pause">
+                <i data-lucide="play" id="play-icon"></i>
+              </button>
+              <button id="btn-reset" class="playback-btn" title="Reset to Start (R)" aria-label="Reset to Start">
+                <i data-lucide="rotate-ccw"></i>
+              </button>
+              <button id="btn-step-forward" class="playback-btn" title="Step One Frame Forward" aria-label="Step Forward">
+                <i data-lucide="step-forward"></i>
+              </button>
+              <div class="time-display" aria-label="Current Playback Time">
+                <span id="current-time">00:00.0</span> / <span id="total-duration">00:06.0</span>
+              </div>
+            </div>
+
+            <div class="transport-center">
+              <div class="scrubber-track-container" id="scrubber-container">
+                <input type="range" id="timeline-scrubber" min="0" max="100" value="0" step="0.1" class="custom-slider" aria-label="Timeline Scrubber">
+                <div class="scrubber-progress" id="scrubber-progress"></div>
+              </div>
+            </div>
+
+            <div class="transport-right">
+              <div class="speed-selector">
+                <span class="speed-label">Speed:</span>
+                <select id="playback-speed" class="custom-select speed-select" aria-label="Playback Speed">
+                  <option value="0.25">0.25x</option>
+                  <option value="0.5">0.5x</option>
+                  <option value="1.0" selected>1.0x</option>
+                  <option value="2.0">2.0x</option>
+                </select>
+              </div>
+              <button id="btn-loop-toggle" class="icon-btn active" title="Toggle Loop Playback" aria-label="Toggle Loop">
+                <i data-lucide="repeat"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Storyboard / Beat Director Bar -->
+        <div class="storyboard-tray glass-card">
+          <div class="tray-header">
+            <div class="tray-title">
+              <i data-lucide="film" class="accent-icon"></i>
+              <h3>Scene Storyboard & Beats</h3>
+              <span class="tray-sub">Sequence & Order Events</span>
+            </div>
+            <button id="btn-add-beat" class="accent-btn-small" title="Add a new formula, title, or curve beat">
+              <i data-lucide="plus-circle"></i> Add Beat
+            </button>
+          </div>
+          <div class="beats-track" id="beatsTrack" role="list"></div>
+        </div>
+
+      </section>
+
+      <!-- RIGHT SLIDE-OVER DRAWER: Code Viewer, Gallery & Terminal Logs -->
+      <aside class="right-drawer glass-card" id="rightDrawer" role="complementary" aria-label="Details Drawer">
+        <div class="drawer-header">
+          <div class="drawer-tabs" role="tablist">
+            <button class="drawer-tab active" data-tab="code-tab" role="tab"><i data-lucide="code-2"></i> Python Code</button>
+            <button class="drawer-tab" data-tab="gallery-tab" role="tab"><i data-lucide="folder-video"></i> Gallery</button>
+            <button class="drawer-tab" data-tab="logs-tab" role="tab"><i data-lucide="terminal"></i> Logs</button>
+          </div>
+          <button id="btn-close-drawer" class="icon-btn" title="Close Drawer"><i data-lucide="x"></i></button>
+        </div>
+
+        <div class="drawer-body">
+          <!-- Tab 1: Python Code -->
+          <div class="tab-content active" id="code-tab">
+            <div class="code-header">
+              <span class="code-lang-tag">Generated ManimGL Code</span>
+              <button id="btn-copy-code" class="action-tag-btn" title="Copy code to clipboard"><i data-lucide="copy"></i> Copy Code</button>
+            </div>
+            <pre class="code-preview-block"><code id="pythonCodeDisplay"># ManimGL code generated automatically in real-time...</code></pre>
+          </div>
+
+          <!-- Tab 2: Gallery -->
+          <div class="tab-content" id="gallery-tab">
+            <div class="gallery-header">
+              <h4>Rendered Animations</h4>
+              <button id="btn-refresh-gallery" class="action-tag-btn"><i data-lucide="refresh-cw"></i> Refresh</button>
+            </div>
+            <div class="gallery-grid" id="galleryGrid"></div>
+          </div>
+
+          <!-- Tab 3: Render Logs -->
+          <div class="tab-content" id="logs-tab">
+            <div class="terminal-logs" id="terminalLogs">
+              <span class="log-line info">[System] Ready to render mathematical scenes with ManimGL.</span>
+            </div>
+          </div>
+        </div>
+      </aside>
+
+    </main>
+
+    <!-- MODAL 1: Visual Math Typer (Point & Click Math Composer) -->
+    <div class="modal-backdrop hidden" id="mathTyperModal" role="dialog" aria-modal="true" aria-labelledby="mathTyperTitle">
+      <div class="modal-card glass-card">
+        <div class="modal-header">
+          <div class="modal-title-group">
+            <i data-lucide="calculator" class="accent-icon"></i>
+            <h3 id="mathTyperTitle">Visual Math Formula Composer</h3>
+          </div>
+          <button class="icon-btn modal-close" id="btn-close-math-typer" title="Close"><i data-lucide="x"></i></button>
+        </div>
+
+        <div class="modal-body">
+          <p class="modal-help-text">Click any math symbol below to insert it into your formula. Formats automatically in KaTeX!</p>
+          
+          <!-- Live Preview Box -->
+          <div class="katex-live-box">
+            <div id="katexPreview" class="katex-display">\int_0^1 x^2 \, dx = \frac{1}{3}</div>
+          </div>
+
+          <!-- Symbol Palette Groups -->
+          <div class="symbol-palette">
+            <div class="symbol-group">
+              <span class="symbol-group-title">Calculus & Operations</span>
+              <div class="symbol-buttons">
+                <button class="sym-btn" data-tex="\int_{a}^{b} f(x)\,dx">&int; Integral</button>
+                <button class="sym-btn" data-tex="\frac{d}{dx}">d/dx Derivative</button>
+                <button class="sym-btn" data-tex="\sum_{i=1}^{n}">\sum Sum</button>
+                <button class="sym-btn" data-tex="\lim_{x \to 0}">lim Limit</button>
+                <button class="sym-btn" data-tex="\frac{a}{b}">&frac12; Fraction</button>
+                <button class="sym-btn" data-tex="\sqrt{x}">&radic; Square Root</button>
+              </div>
+            </div>
+
+            <div class="symbol-group">
+              <span class="symbol-group-title">Symbols & Greek Letters</span>
+              <div class="symbol-buttons">
+                <button class="sym-btn" data-tex="\pi">&pi; Pi</button>
+                <button class="sym-btn" data-tex="\theta">&theta; Theta</button>
+                <button class="sym-btn" data-tex="\alpha">&alpha; Alpha</button>
+                <button class="sym-btn" data-tex="\beta">&beta; Beta</button>
+                <button class="sym-btn" data-tex="\Delta">&Delta; Delta</button>
+                <button class="sym-btn" data-tex="\nabla">&nabla; Del</button>
+                <button class="sym-btn" data-tex="\infty">&infin; Infinity</button>
+                <button class="sym-btn" data-tex="\approx">&asymp; Approx</button>
+              </div>
+            </div>
+
+            <div class="symbol-group">
+              <span class="symbol-group-title">Famous Proof Templates</span>
+              <div class="symbol-buttons">
+                <button class="sym-btn template-btn" data-tex="e^{i\pi} + 1 = 0">Euler's Identity</button>
+                <button class="sym-btn template-btn" data-tex="E = mc^2">Mass-Energy</button>
+                <button class="sym-btn template-btn" data-tex="a^2 + b^2 = c^2">Pythagorean</button>
+                <button class="sym-btn template-btn" data-tex="\nabla \times \mathbf{E} = -\frac{\partial \mathbf{B}}{\partial t}">Maxwell's Equation</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Formula Raw Text Input -->
+          <div class="formula-input-wrap">
+            <label for="mathFormulaRawInput">Formula LaTeX:</label>
+            <input type="text" id="mathFormulaRawInput" value="\int_0^1 x^2 \, dx = \frac{1}{3}" class="custom-text-input">
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button id="btn-cancel-formula" class="secondary-btn">Cancel</button>
+          <button id="btn-insert-formula" class="primary-action-btn"><i data-lucide="check"></i> Insert into Scene</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL 2: Welcome / 3-Step Plug & Play Onboarding Tour -->
+    <div class="modal-backdrop hidden" id="welcomeTourModal" role="dialog" aria-modal="true" aria-labelledby="welcomeTourTitle">
+      <div class="modal-card glass-card tour-modal-card">
+        <div class="modal-header">
+          <div class="modal-title-group">
+            <div class="tour-icon-badge"><i data-lucide="sparkles"></i></div>
+            <h3 id="welcomeTourTitle">Welcome to MathMotion Studio!</h3>
+          </div>
+          <button class="icon-btn modal-close" id="btn-close-tour" title="Close"><i data-lucide="x"></i></button>
+        </div>
+
+        <div class="modal-body tour-body">
+          <p class="tour-intro">Create <strong>3Blue1Brown-quality</strong> mathematical animations with zero coding knowledge. Here's how to create your first animation in 3 simple steps:</p>
+          
+          <div class="tour-steps-grid">
+            <div class="tour-step-card">
+              <div class="step-num-badge">1</div>
+              <h4>Pick a Math Concept</h4>
+              <p>Select from <strong>Collision &pi;</strong>, <strong>Calculus</strong>, <strong>Matrix Grid</strong>, <strong>Fourier Epicycles</strong>, or <strong>Trig Waves</strong> from the top dropdown.</p>
+            </div>
+            <div class="tour-step-card">
+              <div class="step-num-badge">2</div>
+              <h4>Tweak or Drag Visually</h4>
+              <p>Adjust visual sliders on the left, or <strong>click & drag objects directly on the canvas</strong> (drag blocks, tangent points, or vector arrows!).</p>
+            </div>
+            <div class="tour-step-card">
+              <div class="step-num-badge">3</div>
+              <h4>Export Broadcast Video</h4>
+              <p>Click <strong>"Render Manim Video"</strong> in the top bar to get a 1080p/720p MP4 ready for lessons, YouTube, or presentations.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer tour-footer">
+          <label class="checkbox-label">
+            <input type="checkbox" id="chk-dont-show-tour"> Don't show this welcome guide again
+          </label>
+          <button id="btn-start-exploring" class="primary-action-btn">
+            <span>Start Exploring Now</span> <i data-lucide="arrow-right"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL 3: Keyboard Shortcuts & Help Cheat Sheet -->
+    <div class="modal-backdrop hidden" id="shortcutsModal" role="dialog" aria-modal="true" aria-labelledby="shortcutsTitle">
+      <div class="modal-card glass-card">
+        <div class="modal-header">
+          <div class="modal-title-group">
+            <i data-lucide="keyboard" class="accent-icon"></i>
+            <h3 id="shortcutsTitle">Keyboard Shortcuts & Guide</h3>
+          </div>
+          <button class="icon-btn modal-close" id="btn-close-shortcuts" title="Close"><i data-lucide="x"></i></button>
+        </div>
+
+        <div class="modal-body">
+          <div class="shortcuts-grid">
+            <div class="shortcut-row">
+              <kbd>Space</kbd>
+              <span>Play / Pause Animation</span>
+            </div>
+            <div class="shortcut-row">
+              <kbd>R</kbd>
+              <span>Reset Animation to Beginning</span>
+            </div>
+            <div class="shortcut-row">
+              <kbd>G</kbd>
+              <span>Toggle Background Grid</span>
+            </div>
+            <div class="shortcut-row">
+              <kbd>M</kbd>
+              <span>Toggle Collision Sound Effects</span>
+            </div>
+            <div class="shortcut-row">
+              <kbd>1 - 6</kbd>
+              <span>Quick-Switch Mathematical Presets</span>
+            </div>
+            <div class="shortcut-row">
+              <kbd>?</kbd>
+              <span>Show / Hide this Help Cheat Sheet</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button id="btn-ok-shortcuts" class="primary-action-btn">Got It!</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Toast Notification Overlay -->
+    <div id="toast-container" class="toast-container" aria-live="assertive"></div>
+
+  </div>
+
+  <!-- Scripts -->
+  <script src="js/math_typer.js"></script>
+  <script src="js/math_canvas.js"></script>
+  <script src="js/app.js"></script>
+  <script>
+    lucide.createIcons();
+  </script>
+</body>
+</html>
