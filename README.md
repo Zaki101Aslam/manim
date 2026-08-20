@@ -70,7 +70,9 @@
 
 ---
 
-## 🚀 Quick Start (Plug & Play Across All Platforms)
+## 🚀 Quick Start (Standalone Native App — No Localhost / No Ports)
+
+MathMotion Studio opens as a **standalone desktop application** on your computer. It requires **no browser tabs, no web servers, and no open localhost ports**.
 
 ### 🪟 Windows (Zero Terminal Setup)
 Double-click **`start_studio.bat`** in File Explorer.
@@ -84,28 +86,25 @@ Double-click **`start_studio.command`** in Finder.
 git clone https://github.com/Zaki101Aslam/manim.git
 cd manim
 
-# One-command launch
+# Launch Standalone Native App
 ./start_studio.sh
 # or
 python studio.py
 ```
 
-Then visit **[http://localhost:8000](http://localhost:8000)** in your browser!
-
 ---
 
-## 🏗️ Architecture
+## 🏗️ Standalone Desktop Architecture
 
 ```mermaid
 graph TD
-    A[Web Studio UI - Frontend] -->|Visual Parameters| B[Scene Parameter State]
-    A -->|Interactive Sandbox| C[60 FPS Canvas Engine]
-    A -->|Math Formula Typer| D[KaTeX Visual Composer]
-    A -->|Render Video| E[FastAPI Backend Server]
-    E -->|Compile Python Script| F[scene_builder.py]
-    F -->|Headless Render Command| G[3b1b ManimGL Engine]
-    G -->|Generate MP4 / GIF| H[videos/ Directory]
-    H -->|Stream Video| A
+    A[Native Desktop Window - GUI] -->|Direct Native JS Bridge| B[Python StudioNativeAPI]
+    A -->|Interactive Sandbox| C[60 FPS Real-time Math Canvas]
+    A -->|Math Formula Typer| D[KaTeX Visual Equation Typer]
+    B -->|Compile Python Script| E[scene_builder.py]
+    E -->|Headless Render Engine| F[3b1b ManimGL Engine]
+    F -->|Render Broadcast MP4| G[videos/ Directory]
+    G -->|Direct Native File Stream| A
 ```
 
 ---

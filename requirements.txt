@@ -28,3 +28,4 @@ tqdm
 typing-extensions; python_version < "3.11"
 validators
 wgpu
+pywebview>=5.0.0

@@ -4,6 +4,60 @@
  */
 
 document.addEventListener('DOMContentLoaded', () => {
+  // Standalone Desktop App Native Bridge (Zero Localhost / Zero Port)
+  const NativeBridge = {
+    isDesktop() {
+      return !!(window.pywebview && window.pywebview.api);
+    },
+    async generateCode(project) {
+      if (this.isDesktop()) {
+        return await window.pywebview.api.generate_code(project);
+      }
+      try {
+        const resp = await fetch('/api/generate-code', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ project })
+        });
+        return await resp.json();
+      } catch (e) {
+        return { status: 'error', message: e.message };
+      }
+    },
+    async renderVideo(payload) {
+      if (this.isDesktop()) {
+        return await window.pywebview.api.render_video(payload);
+      }
+      try {
+        const resp = await fetch('/api/render', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        return await resp.json();
+      } catch (e) {
+        return { status: 'error', message: e.message };
+      }
+    },
+    async getVideos() {
+      if (this.isDesktop()) {
+        return await window.pywebview.api.get_videos();
+      }
+      try {
+        const resp = await fetch('/api/videos');
+        return await resp.json();
+      } catch (e) {
+        return { videos: [] };
+      }
+    },
+    async openVideo(videoPath) {
+      if (this.isDesktop() && window.pywebview.api.open_video) {
+        return await window.pywebview.api.open_video(videoPath);
+      }
+      window.open(videoPath, '_blank');
+    }
+  };
+
   // Initialize Sub-systems
   const canvasEngine = new MathCanvasEngine('mathCanvas', 'mathHud');
   const mathTyper = new MathTyper();
@@ -627,7 +681,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // =========================================================================
-  // ManimGL Video Rendering (Backend API)
+  // ManimGL Video Rendering (Native Bridge / Standalone App)
   // =========================================================================
   async function renderManimVideo() {
     btnRenderManim.classList.add('rendering');
@@ -644,21 +698,15 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     try {
-      const resp = await fetch('/api/render', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-
-      const data = await resp.json();
+      const data = await NativeBridge.renderVideo(payload);
       btnRenderManim.classList.remove('rendering');
       btnRenderManim.querySelector('span').textContent = 'Render Manim Video';
 
       if (data.status === 'success') {
-        state.renderedVideoUrl = data.video_url;
-        manimVideoPlayer.src = data.video_url;
+        state.renderedVideoUrl = data.video_url || data.video_path;
+        manimVideoPlayer.src = state.renderedVideoUrl;
         showToast("Video rendered successfully in " + data.duration_render + "s!", "success");
-        logToTerminal(`[Render] Completed in ${data.duration_render}s. File: ${data.filename}`, 'success');
+        logToTerminal(`[Render] Completed in ${data.duration_render}s. File: ${data.video_name || data.filename}`, 'success');
         setViewMode('video');
         refreshGallery();
       } else {
@@ -668,7 +716,7 @@ document.addEventListener('DOMContentLoaded', () => {
     } catch (err) {
       btnRenderManim.classList.remove('rendering');
       btnRenderManim.querySelector('span').textContent = 'Render Manim Video';
-      showToast("Server connection error: " + err.message, "error");
+      showToast("Render error: " + err.message, "error");
       logToTerminal(`[Error] ${err.message}`, 'error');
     }
   }
@@ -681,18 +729,11 @@ document.addEventListener('DOMContentLoaded', () => {
   // =========================================================================
   async function syncPythonCode() {
     try {
-      const resp = await fetch('/api/generate-code', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          project: {
-            type: state.currentPreset,
-            config: state.config
-          }
-        })
+      const data = await NativeBridge.generateCode({
+        type: state.currentPreset,
+        config: state.config
       });
-      const data = await resp.json();
-      if (data.code) {
+      if (data && data.code) {
         pythonCodeDisplay.textContent = data.code;
       }
     } catch (e) {}
@@ -703,8 +744,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // =========================================================================
   async function refreshGallery() {
     try {
-      const resp = await fetch('/api/videos');
-      const data = await resp.json();
+      const data = await NativeBridge.getVideos();
       galleryGrid.innerHTML = '';
       if (!data.videos || data.videos.length === 0) {
         galleryGrid.innerHTML = '<p style="color:#64748b; font-size:12px;">No videos rendered yet.</p>';
@@ -718,7 +758,7 @@ document.addEventListener('DOMContentLoaded', () => {
             <h5>${v.name}</h5>
             <span>${v.size_mb} MB</span>
           </div>
-          <button class="action-tag-btn" onclick="window.open('${v.url}', '_blank')"><i data-lucide="play"></i> Watch</button>
+          <button class="action-tag-btn" onclick="window.NativeBridge ? window.NativeBridge.openVideo('${v.path || v.url}') : window.open('${v.url}', '_blank')"><i data-lucide="play"></i> Watch</button>
         `;
         galleryGrid.appendChild(item);
       });
